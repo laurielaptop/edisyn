@@ -18,7 +18,6 @@ import javax.sound.midi.*;
 
 /**
    A patch editor for the Korg M1.
-   Phase 1: SysEx round-trip scaffold. UI widgets added in Phase 2.
 */
 
 public class KorgM1 extends Synth
@@ -26,23 +25,154 @@ public class KorgM1 extends Synth
     public static final String[] BANKS = { "Internal", "Card" };
     public static final int MAXIMUM_NAME_LENGTH = 10;
 
+    public static final String[] OSC_MODES = { "Single", "Double", "Drum" };
+    public static final String[] POLY_MODES = { "Poly", "Mono" };
+    public static final String[] MG_WAVES = { "Triangle", "Up Saw", "Down Saw", "Rectangle" };
+
+    public static final String[] EFFECT_TYPES = {
+        "No Effect",
+        "Hall", "Ensemble Hall", "Concert Hall",
+        "Room", "Large Room", "Live Stage",
+        "Early Ref 1", "Early Ref 2", "Early Ref 3",
+        "Stereo Delay", "Cross Delay",
+        "Stereo Chorus 1", "Stereo Chorus 2",
+        "Stereo Flanger", "Cross Flanger",
+        "Phaser 1", "Phaser 2",
+        "Stereo Tremolo 1", "Stereo Tremolo 2",
+        "Equalizer",
+        "Overdrive", "Distortion",
+        "Exciter",
+        "Symphonic Ensemble", "Rotary Speaker",
+        "Delay/Hall", "Delay/Room", "Delay/Early Ref",
+        "Delay/Delay", "Delay/Chorus", "Delay/Flanger",
+        "Delay/Phaser", "Delay/Tremolo"
+        };
+
+    // Internal multisounds 00-99, Card placeholders 100-127
+    public static final String[] MULTISOUNDS;
+    static
+        {
+        String[] internal = {
+            "00 Piano",       "01 E.Piano 1",  "02 E.Piano 2",  "03 Clav",
+            "04 Harpsicord",  "05 Organ 1",    "06 Organ 2",    "07 MagicOrgan",
+            "08 Guitar 1",    "09 Guitar 2",   "10 E.Guitar",   "11 Sitar 1",
+            "12 Sitar 2",     "13 A.Bass",     "14 Pick Bass",  "15 E.Bass",
+            "16 Fretless",    "17 SynthBass 1","18 SynthBass 2","19 Vibes",
+            "20 Bell",        "21 Tubular",    "22 Bell Ring",  "23 Karimba",
+            "24 KarimbaNT",   "25 SynMallet",  "26 Flute",      "27 Pan Flute",
+            "28 Bottles",     "29 Voices",     "30 Choir",      "31 Strings",
+            "32 Brass 1",     "33 Brass 2",    "34 Tenor Sax",  "35 Mute TP",
+            "36 Trumpet",     "37 TubaFlugel", "38 DoubleReed", "39 Koto Trem",
+            "40 BambooTrem",  "41 Rhythm",     "42 Lore",       "43 Lore NT",
+            "44 Flexatone",   "45 WindBells",  "46 Pole",       "47 Pole NT",
+            "48 Block",       "49 Block NT",   "50 FingerSnap", "51 Pop",
+            "52 Drop",        "53 Drop NT",    "54 Breath",     "55 Breath NT",
+            "56 Pluck",       "57 Pluck NT",   "58 Vibe Hit",   "59 VibeHit NT",
+            "60 Hammer",      "61 Metal Hit",  "62 MetalHit NT","63 Pick",
+            "64 Distortion",  "65 Dist NT",    "66 Bass Thumb", "67 BasThum NT1",
+            "68 BasThum NT2", "69 Wire",       "70 Pan Wave",   "71 Ping Wave",
+            "72 Fv Wave",     "73 Mv Wave",    "74 Voice Wave", "75 VoiceWvNT 1",
+            "76 VoiceWvNT 2", "77 DWGS E.P.1", "78 DWGS E.P.2", "79 DWGS E.P.3",
+            "80 DWGS Piano",  "81 DWGS Clav",  "82 DWGS Vibe 1","83 DWGS Bass 1",
+            "84 DWGS Bass 2", "85 DWGS Bell 1","86 DWGS Orgn 1","87 DWGS Orgn 2",
+            "88 DWGS Voice",  "89 SquareWave", "90 Digital 1",  "91 Saw Wave",
+            "92 Digital 2",   "93 25% Pulse",  "94 10% Pulse",  "95 Digital 3",
+            "96 Digital 4",   "97 Digital 5",  "98 DWGS TRI",   "99 DWGS Sine"
+            };
+        MULTISOUNDS = new String[128];
+        for (int i = 0; i < 100; i++)
+            MULTISOUNDS[i] = internal[i];
+        for (int i = 100; i < 128; i++)
+            MULTISOUNDS[i] = "Card " + String.format("%02d", i - 100);
+        }
+
+
     public KorgM1()
         {
-        // --- Placeholder UI (Phase 2 will replace this) ---
-        JComponent panel = new SynthPanel(this);
+        // --- Global tab ---
+        JComponent globalPanel = new SynthPanel(this);
         VBox vbox = new VBox();
-        vbox.add(new JLabel("Korg M1  —  UI coming in Phase 2"));
-        panel.add(vbox, BorderLayout.CENTER);
-        addTab("Program", panel);
+        vbox.add(addNameGlobal(Style.COLOR_GLOBAL()));
+        globalPanel.add(vbox, BorderLayout.CENTER);
+        addTab("Global", globalPanel);
+
+        // --- OSC tab ---
+        JComponent oscPanel = new SynthPanel(this);
+        vbox = new VBox();
+        vbox.add(addOscCommon(Style.COLOR_A()));
+        HBox hbox = new HBox();
+        hbox.add(addOsc1(Style.COLOR_B()));
+        hbox.addLast(addOsc2(Style.COLOR_C()));
+        vbox.add(hbox);
+        oscPanel.add(vbox, BorderLayout.CENTER);
+        addTab("OSC", oscPanel);
+
+        // --- Pitch EG tab ---
+        JComponent pitchPanel = new SynthPanel(this);
+        vbox = new VBox();
+        vbox.add(addPitchEG(1, Style.COLOR_A()));
+        vbox.add(addPitchEG(2, Style.COLOR_B()));
+        pitchPanel.add(vbox, BorderLayout.CENTER);
+        addTab("Pitch EG", pitchPanel);
+
+        // --- VDF tab ---
+        JComponent vdfPanel = new SynthPanel(this);
+        vbox = new VBox();
+        hbox = new HBox();
+        hbox.add(addVDF(1, Style.COLOR_A()));
+        hbox.addLast(addVDFEG(1, Style.COLOR_B()));
+        vbox.add(hbox);
+        hbox = new HBox();
+        hbox.add(addVDF(2, Style.COLOR_C()));
+        hbox.addLast(addVDFEG(2, Style.COLOR_A()));
+        vbox.add(hbox);
+        vdfPanel.add(vbox, BorderLayout.CENTER);
+        addTab("VDF", vdfPanel);
+
+        // --- VDA tab ---
+        JComponent vdaPanel = new SynthPanel(this);
+        vbox = new VBox();
+        hbox = new HBox();
+        hbox.add(addVDA(1, Style.COLOR_A()));
+        hbox.addLast(addVDAEG(1, Style.COLOR_B()));
+        vbox.add(hbox);
+        hbox = new HBox();
+        hbox.add(addVDA(2, Style.COLOR_C()));
+        hbox.addLast(addVDAEG(2, Style.COLOR_A()));
+        vbox.add(hbox);
+        vdaPanel.add(vbox, BorderLayout.CENTER);
+        addTab("VDA", vdaPanel);
+
+        // --- Mod tab ---
+        JComponent modPanel = new SynthPanel(this);
+        vbox = new VBox();
+        hbox = new HBox();
+        hbox.add(addMG("pitchmg", "Pitch MG", Style.COLOR_A()));
+        hbox.addLast(addMG("cutoffmg", "Cutoff MG", Style.COLOR_B()));
+        vbox.add(hbox);
+        hbox = new HBox();
+        hbox.add(addAfterTouch(Style.COLOR_C()));
+        hbox.addLast(addJoyStick(Style.COLOR_A()));
+        vbox.add(hbox);
+        vbox.add(addEGPolarity(Style.COLOR_B()));
+        modPanel.add(vbox, BorderLayout.CENTER);
+        addTab("Mod", modPanel);
+
+        // --- FX tab ---
+        JComponent fxPanel = new SynthPanel(this);
+        vbox = new VBox();
+        vbox.add(addFX(1, Style.COLOR_A()));
+        vbox.add(addFX(2, Style.COLOR_B()));
+        vbox.add(addFXPlacement(Style.COLOR_C()));
+        fxPanel.add(vbox, BorderLayout.CENTER);
+        addTab("FX", fxPanel);
 
         model.set("name", "Init      ");
         model.set("bank", 0);
         model.set("number", 0);
         loadDefaults();
 
-        // --- Parameter ranges (after loadDefaults so values exist) ---
-
-        // Location metadata: mutated freely; testVerify skips them in comparison
+        // Location metadata
         model.setMin("bank", 0);            model.setMax("bank", 1);
         model.setMin("number", 0);          model.setMax("number", 99);
 
@@ -101,7 +231,6 @@ public class KorgM1 extends Synth
         model.setMin("output3pan", 0);          model.setMax("output3pan", 101);
         model.setMin("output4pan", 0);          model.setMax("output4pan", 101);
         model.setMin("effectrouting", 0);       model.setMax("effectrouting", 127);
-        // Effect params: raw 0-255 to survive all effect types without clamping
         for (int i = 1; i <= 8; i++)
             {
             model.setMin("effect1p" + i, 0);    model.setMax("effect1p" + i, 255);
@@ -160,7 +289,7 @@ public class KorgM1 extends Synth
         model.setMin("egpol3", 0);  model.setMax("egpol3", 255);
         model.setMin("egpol4", 0);  model.setMax("egpol4", 255);
 
-        // OSC-2 Pitch EG (mirror of OSC-1)
+        // OSC-2 Pitch EG
         model.setMin("pitcheg2startlevel", -99);    model.setMax("pitcheg2startlevel", 99);
         model.setMin("pitcheg2attacktime", 0);       model.setMax("pitcheg2attacktime", 99);
         model.setMin("pitcheg2attacklevel", -99);    model.setMax("pitcheg2attacklevel", 99);
@@ -214,14 +343,392 @@ public class KorgM1 extends Synth
         }
 
 
-    // ---- Identity ---------------------------------------------------------
+    // =========================================================================
+    // UI helper methods
+    // =========================================================================
+
+    JComponent addNameGlobal(Color color)
+        {
+        Category category = new Category(this, getSynthName(), color);
+        HBox hbox = new HBox();
+
+        VBox vbox = new VBox();
+        HBox hbox2 = new HBox();
+        hbox2.add(new PatchDisplay(this, 9));
+        vbox.add(hbox2);
+        JComponent comp = new StringComponent("Patch Name", this, "name", 10, "Name must be up to 10 ASCII characters.")
+            {
+            public String replace(String val)
+                {
+                return revisePatchName(val);
+                }
+            public void update(String key, Model model)
+                {
+                super.update(key, model);
+                updateTitle();
+                }
+            };
+        vbox.addBottom(comp);
+        hbox.add(vbox);
+        category.add(hbox, BorderLayout.WEST);
+        return category;
+        }
+
+    JComponent addOscCommon(Color color)
+        {
+        Category category = new Category(this, "Oscillator Common", color);
+        HBox hbox = new HBox();
+
+        VBox vbox = new VBox();
+        JComponent comp = new Chooser("Mode", this, "oscmode", OSC_MODES);
+        vbox.add(comp);
+        comp = new Chooser("Poly/Mono", this, "polymode", POLY_MODES);
+        vbox.add(comp);
+        comp = new CheckBox("Hold", this, "hold");
+        vbox.add(comp);
+        hbox.add(vbox);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addOsc1(Color color)
+        {
+        Category category = new Category(this, "OSC 1", color);
+        HBox hbox = new HBox();
+
+        JComponent comp = new Chooser("Multisound", this, "osc1multisound", MULTISOUNDS);
+        hbox.add(comp);
+        comp = new LabelledDial("Octave", this, "osc1octave", color, -1, 1);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addOsc2(Color color)
+        {
+        Category category = new Category(this, "OSC 2", color);
+        HBox hbox = new HBox();
+
+        JComponent comp = new Chooser("Multisound", this, "osc2multisound", MULTISOUNDS);
+        hbox.add(comp);
+        comp = new LabelledDial("Octave", this, "osc2octave", color, -1, 1);
+        hbox.add(comp);
+        comp = new LabelledDial("Interval", this, "interval", color, -12, 12);
+        hbox.add(comp);
+        comp = new LabelledDial("Detune", this, "detune", color, -50, 50);
+        hbox.add(comp);
+        comp = new LabelledDial("Delay Start", this, "delaystart", color, 0, 99);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addPitchEG(int n, Color color)
+        {
+        Category category = new Category(this, "OSC " + n + " Pitch EG", color);
+        HBox hbox = new HBox();
+        String p = "pitcheg" + n;
+
+        JComponent comp;
+        comp = new LabelledDial("Start", this, p + "startlevel", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Atk Time", this, p + "attacktime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Atk Level", this, p + "attacklevel", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Dcy Time", this, p + "decaytime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Rel Time", this, p + "releasetime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Rel Level", this, p + "releaselevel", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Time Vel", this, p + "timevelsense", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Sense");
+        hbox.add(comp);
+        comp = new LabelledDial("Level Vel", this, p + "levelvelsense", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Sense");
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addVDF(int n, Color color)
+        {
+        Category category = new Category(this, "VDF " + n, color);
+        HBox hbox = new HBox();
+        String p = "vdf" + n;
+
+        JComponent comp;
+        comp = new LabelledDial("Cutoff", this, p + "cutoff", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("KBD Track", this, p + "kbdtrackcenter", color, 0, 127);
+        ((LabelledDial)comp).addAdditionalLabel("Center");
+        hbox.add(comp);
+        comp = new LabelledDial("Cutoff KBD", this, p + "cutoffkbdtrack", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Track");
+        hbox.add(comp);
+        comp = new LabelledDial("EG Int", this, p + "egintensity", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("EG Time", this, p + "egtimekbdtrack", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("KBD Track");
+        hbox.add(comp);
+        comp = new LabelledDial("EG Int Vel", this, p + "egintvelsense", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Sense");
+        hbox.add(comp);
+        comp = new LabelledDial("Cutoff Vel", this, p + "cutoffvelsense", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Sense");
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addVDFEG(int n, Color color)
+        {
+        Category category = new Category(this, "VDF " + n + " EG", color);
+        HBox hbox = new HBox();
+        String p = "vdfeg" + n;
+
+        JComponent comp;
+        comp = new LabelledDial("Atk Time", this, p + "attacktime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Atk Level", this, p + "attacklevel", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Dcy Time", this, p + "decaytime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Break", this, p + "breakpoint", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Point");
+        hbox.add(comp);
+        comp = new LabelledDial("Slope", this, p + "slopetime", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Time");
+        hbox.add(comp);
+        comp = new LabelledDial("Sustain", this, p + "sustainlevel", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Level");
+        hbox.add(comp);
+        comp = new LabelledDial("Rel Time", this, p + "releasetime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Rel Level", this, p + "releaselevel", color, -99, 99);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addVDA(int n, Color color)
+        {
+        Category category = new Category(this, "VDA " + n, color);
+        HBox hbox = new HBox();
+        String p = "vda" + n;
+
+        JComponent comp;
+        comp = new LabelledDial("Level", this, p + "level", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("KBD Track", this, p + "kbdtrackcenter", color, 0, 127);
+        ((LabelledDial)comp).addAdditionalLabel("Center");
+        hbox.add(comp);
+        comp = new LabelledDial("Amp KBD", this, p + "ampkbdtrack", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Track");
+        hbox.add(comp);
+        comp = new LabelledDial("Amp Vel", this, p + "ampvelsense", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Sense");
+        hbox.add(comp);
+        comp = new LabelledDial("EG Time", this, p + "egtimekbdtrack", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("KBD Track");
+        hbox.add(comp);
+        comp = new LabelledDial("EG Time Vel", this, p + "egtimevelsense", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Sense");
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addVDAEG(int n, Color color)
+        {
+        Category category = new Category(this, "VDA " + n + " EG", color);
+        HBox hbox = new HBox();
+        String p = "vdaeg" + n;
+
+        JComponent comp;
+        comp = new LabelledDial("Atk Time", this, p + "attacktime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Atk Level", this, p + "attacklevel", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Dcy Time", this, p + "decaytime", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Break", this, p + "breakpoint", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Point");
+        hbox.add(comp);
+        comp = new LabelledDial("Slope", this, p + "slopetime", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Time");
+        hbox.add(comp);
+        comp = new LabelledDial("Sustain", this, p + "sustainlevel", color, -99, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Level");
+        hbox.add(comp);
+        comp = new LabelledDial("Rel Time", this, p + "releasetime", color, 0, 99);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addMG(String prefix, String title, Color color)
+        {
+        Category category = new Category(this, title, color);
+        HBox hbox = new HBox();
+
+        VBox vbox = new VBox();
+        JComponent comp = new Chooser("Wave", this, prefix + "wave", MG_WAVES);
+        vbox.add(comp);
+        comp = new CheckBox("OSC 1 On", this, prefix + "osc1on");
+        vbox.add(comp);
+        comp = new CheckBox("OSC 2 On", this, prefix + "osc2on");
+        vbox.add(comp);
+        comp = new CheckBox("Key Sync", this, prefix + "keysync");
+        vbox.addBottom(comp);
+        hbox.add(vbox);
+
+        comp = new LabelledDial("Frequency", this, prefix + "freq", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Delay", this, prefix + "delay", color, 0, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Intensity", this, prefix + "intensity", color, 0, 99);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addAfterTouch(Color color)
+        {
+        Category category = new Category(this, "After Touch", color);
+        HBox hbox = new HBox();
+
+        JComponent comp;
+        comp = new LabelledDial("Pitch", this, "atpitch", color, -12, 12);
+        hbox.add(comp);
+        comp = new LabelledDial("Pitch MG", this, "atpitchmg", color, -12, 12);
+        hbox.add(comp);
+        comp = new LabelledDial("VDF Cutoff", this, "atvdfcutoff", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("VDF MG", this, "atvdfmg", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("VDA Amp", this, "atvdaamp", color, -99, 99);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addJoyStick(Color color)
+        {
+        Category category = new Category(this, "Joy Stick", color);
+        HBox hbox = new HBox();
+
+        JComponent comp;
+        comp = new LabelledDial("Pitch Bend", this, "joypitchbend", color, -12, 12);
+        hbox.add(comp);
+        comp = new LabelledDial("Sweep Int", this, "joysweepint", color, -99, 99);
+        hbox.add(comp);
+        comp = new LabelledDial("Pitch MG", this, "joypitchmgint", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Int");
+        hbox.add(comp);
+        comp = new LabelledDial("VDF MG", this, "joyvdfmgfreq1", color, 0, 3);
+        ((LabelledDial)comp).addAdditionalLabel("Freq 1");
+        hbox.add(comp);
+        comp = new LabelledDial("VDF MG", this, "joyvdfmgint", color, 0, 99);
+        ((LabelledDial)comp).addAdditionalLabel("Int");
+        hbox.add(comp);
+        comp = new LabelledDial("VDF MG", this, "joyvdfmgfreq2", color, 0, 3);
+        ((LabelledDial)comp).addAdditionalLabel("Freq 2");
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addEGPolarity(Color color)
+        {
+        Category category = new Category(this, "EG SW / Polarity", color);
+        HBox hbox = new HBox();
+
+        String[] labels = { "OSC1 Pitch", "VDF 1",     "VDA1 KBD", "VDA1 Vel",
+                            "OSC2 Pitch", "VDF 2",     "VDA2 KBD", "VDA2 Vel" };
+        String[] keys   = { "egpol1",     "egpol2",    "egpol3",   "egpol4",
+                            "egpol5",     "egpol6",    "egpol7",   "egpol8" };
+        for (int i = 0; i < 8; i++)
+            {
+            JComponent comp = new LabelledDial(labels[i], this, keys[i], color, 0, 255);
+            hbox.add(comp);
+            }
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addFX(int n, Color color)
+        {
+        Category category = new Category(this, "Effect " + n, color);
+        HBox hbox = new HBox();
+        String p = "effect" + n;
+
+        VBox vbox = new VBox();
+        JComponent comp = new Chooser("Type", this, p + "type", EFFECT_TYPES);
+        vbox.add(comp);
+        hbox.add(vbox);
+
+        for (int i = 1; i <= 8; i++)
+            {
+            comp = new LabelledDial("P" + i, this, p + "p" + i, color, 0, 255);
+            hbox.add(comp);
+            }
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+    JComponent addFXPlacement(Color color)
+        {
+        Category category = new Category(this, "Effect Placement", color);
+        HBox hbox = new HBox();
+
+        JComponent comp;
+        comp = new LabelledDial("1/2 Bal L", this, "effect12balleft", color, 0, 100);
+        hbox.add(comp);
+        comp = new LabelledDial("1/2 Bal R", this, "effect12balright", color, 0, 100);
+        hbox.add(comp);
+        comp = new LabelledDial("Eff2 Lvl L", this, "effect2levelleft", color, 0, 100);
+        hbox.add(comp);
+        comp = new LabelledDial("Eff2 Lvl R", this, "effect2levelright", color, 0, 100);
+        hbox.add(comp);
+        comp = new LabelledDial("Out 3 Pan", this, "output3pan", color, 0, 101);
+        hbox.add(comp);
+        comp = new LabelledDial("Out 4 Pan", this, "output4pan", color, 0, 101);
+        hbox.add(comp);
+        comp = new LabelledDial("Routing", this, "effectrouting", color, 0, 127);
+        hbox.add(comp);
+
+        category.add(hbox, BorderLayout.CENTER);
+        return category;
+        }
+
+
+    // =========================================================================
+    // Identity
+    // =========================================================================
 
     public static String getSynthName() { return "Korg M1"; }
     public String getDefaultResourceFileName() { return "KorgM1.init"; }
     public String getHTMLResourceFileName() { return "KorgM1.html"; }
 
 
-    // ---- Patch name -------------------------------------------------------
+    // =========================================================================
+    // Patch name
+    // =========================================================================
 
     public String getPatchName(Model model) { return model.get("name", "Init      "); }
 
@@ -248,7 +755,9 @@ public class KorgM1 extends Synth
         }
 
 
-    // ---- Patch location ---------------------------------------------------
+    // =========================================================================
+    // Patch location
+    // =========================================================================
 
     public String getPatchLocationName(Model model)
         {
@@ -295,7 +804,9 @@ public class KorgM1 extends Synth
         }
 
 
-    // ---- MIDI I/O ---------------------------------------------------------
+    // =========================================================================
+    // MIDI I/O
+    // =========================================================================
 
     public void changePatch(Model tempModel)
         {
@@ -310,7 +821,6 @@ public class KorgM1 extends Synth
 
     public int getPauseAfterChangePatch() { return 50; }
 
-    /** bank and number are location metadata, not embedded in the 40H dump. */
     public boolean testVerify(Synth synth2, String key, Object obj1, Object obj2)
         {
         return key.equals("bank") || key.equals("number");
@@ -326,7 +836,9 @@ public class KorgM1 extends Synth
         }
 
 
-    // ---- Parse ------------------------------------------------------------
+    // =========================================================================
+    // Parse
+    // =========================================================================
 
     public int parse(byte[] data, boolean fromFile)
         {
@@ -508,7 +1020,9 @@ public class KorgM1 extends Synth
         }
 
 
-    // ---- Emit -------------------------------------------------------------
+    // =========================================================================
+    // Emit
+    // =========================================================================
 
     public byte[] emit(Model tempModel, boolean toWorkingMemory, boolean toFile)
         {
