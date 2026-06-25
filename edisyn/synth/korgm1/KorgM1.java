@@ -821,6 +821,8 @@ public class KorgM1 extends Synth
 
     public int getPauseAfterChangePatch() { return 50; }
 
+    public boolean getAlwaysChangesPatchesOnRequestDump() { return true; }
+
     public boolean testVerify(Synth synth2, String key, Object obj1, Object obj2)
         {
         return key.equals("bank") || key.equals("number");
@@ -833,6 +835,40 @@ public class KorgM1 extends Synth
             (byte)(0x30 | Math.max(0, getChannelOut() - 1)),
             (byte)0x19, (byte)0x10, (byte)0xF7
             };
+        }
+
+    public void parseParameter(byte[] data)
+        {
+        if (data.length < 6) return;
+        if (data[0] != (byte)0xF0 || data[1] != (byte)0x42 ||
+            (data[2] & 0xF0) != 0x30 || data[3] != (byte)0x19) return;
+        byte func = data[4];
+        if (func == (byte)0x22)
+            showSimpleError("Write Error", "Write failed. The M1 may be memory-protected or the card is not inserted.");
+        else if (func == (byte)0x24)
+            showSimpleError("Data Load Error", "The M1 reported a data load error.");
+        }
+
+    public Object[] emitAll(Model tempModel, boolean toWorkingMemory, boolean toFile)
+        {
+        if (tempModel == null) tempModel = getModel();
+
+        byte[] patch = emit(tempModel, toWorkingMemory, toFile);
+
+        if (toWorkingMemory || toFile)
+            return new Object[] { patch };
+
+        // When writing to a specific slot, send patch data then the write command.
+        int ch = Math.max(0, getChannelOut() - 1);
+        byte[] writeCmd = new byte[] {
+            (byte)0xF0, (byte)0x42,
+            (byte)(0x30 | ch),
+            (byte)0x19, (byte)0x11,
+            (byte)(tempModel.get("bank") & 0x0F),
+            (byte)(tempModel.get("number") & 0x7F),
+            (byte)0xF7
+            };
+        return new Object[] { patch, writeCmd };
         }
 
 
@@ -1211,4 +1247,25 @@ public class KorgM1 extends Synth
         result[5 + packed.length] = (byte)0xF7;
         return result;
         }
+
+
+    // =========================================================================
+    // Librarian support
+    // =========================================================================
+
+    public boolean getSupportsPatchWrites() { return true; }
+
+    public String[] getBankNames() { return BANKS; }
+
+    public boolean[] getWriteableBanks() { return new boolean[] { true, true }; }
+
+    public String[] getPatchNumberNames()
+        {
+        String[] names = new String[100];
+        for (int i = 0; i < 100; i++)
+            names[i] = String.format("%02d", i);
+        return names;
+        }
+
+    public int getPatchNameLength() { return MAXIMUM_NAME_LENGTH; }
     }

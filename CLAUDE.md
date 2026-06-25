@@ -4,13 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Active Work
 
-- **Korg M1 editor** — Phase 1 complete. See `docs/korg-m1-editor-plan.md` for the full plan.
-  - **Phase 1 (done):** `KorgM1.java`, `KorgM1Rec.java`, `KorgM1.init`, `synths.txt` entry
-    - SanityCheck passes 20 rounds clean (zero failures, zero warnings)
-    - Gate (c): factory "Piano 16'" values verified from `docs/KorgM1_piano16.syx`
-    - Gate (d): emit() is byte-identical to original (name null-pad 0x00→0x20 is acceptable)
-    - Gate (b): interactive UI launch not yet done — run `make run`, open Korg M1 from Korg menu
-  - **Next step: Phase 2** — full editing UI (OSC/Pitch EG/VDF/VDA/Mod/FX/Global/About tabs)
+- **Korg M1 editor** — Phases 1–4 complete. See `docs/korg-m1-editor-plan.md` for the full plan.
+  - **Phase 1 (done):** `KorgM1.java`, `KorgM1Rec.java`, `KorgM1.init`, `synths.txt` entry; SanityCheck passes clean
+  - **Phase 2 (done):** Full editing UI — 7 tabs (Global, OSC, Pitch EG, VDF, VDA, Mod, FX), all 143 parameters
+  - **Phase 3 (done):** MIDI integration — `emitAll()` with write command (11H), `parseParameter()` for error detection, `getAlwaysChangesPatchesOnRequestDump()`
+  - **Phase 4 (done):** Librarian support — `getSupportsPatchWrites()`, `getBankNames()`, `getWriteableBanks()`, `getPatchNumberNames()`
+  - **Next step: Phase 5** — About HTML polish, hardware testing, combination mode (deferred)
   - Reference files: `docs/M1_E4.pdf` (manual), `docs/KorgM1_piano16.syx` (init), `docs/M1_midi_export.syx` (factory bank)
 
 ## What is Edisyn

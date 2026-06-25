@@ -1,12 +1,73 @@
-<html>
-<head></head>
+<html><head></head>
 <body>
-<h2>Korg M1</h2>
-<p>Patch editor for the Korg M1 synthesizer (1988).</p>
-<p><b>MIDI Setup:</b> Set the M1's Global MIDI Channel to match Edisyn's output channel.
-Enable Memory Protect OFF in Global mode before writing patches.</p>
-<p><b>Memory Allocation:</b> The M1 supports either 100 Programs / 100 Combinations
-or 50/50 (with more sequencer memory). Program numbers 00–99 (or 00–49) are valid
-depending on your Global setting.</p>
+
+<h1>Korg M1</h1>
+<h2>Program Patch Editor</h2>
+
+<p>This editor works with the <b>Korg M1</b> (1988) synthesizer.  It edits Program patches
+(single-patch mode only; Combination mode is not currently supported).
+
+<br><br><h3>Communicating with Edisyn</h3>
+
+Set the M1's <b>Global MIDI Channel</b> to match Edisyn's MIDI output channel.  To do this, hold
+<b>GLOBAL</b> and use the data slider or arrow buttons to select the MIDI channel.
+
+<p>Before writing patches to the M1, turn off <b>Memory Protect</b>.  In Global mode, set
+<b>MEM PROT</b> to OFF.  If memory protect is on, write commands will fail silently (the M1
+will return a Write Error).
+
+<br><br><h3>Requesting and Sending Patches</h3>
+
+<p>Because the M1 has no direct "request patch by number" SysEx command, Edisyn will first
+send a Program Change to select the desired patch, then request the current program dump.
+A short settling delay is inserted automatically.
+
+<p>To send a patch to the M1's working memory, use <b>Send to Synth</b>.  To write a patch
+to a specific memory slot, use <b>Write to Synth</b> and enter a bank (Internal or Card) and
+patch number (00–99).
+
+<br><br><h3>Memory Allocation</h3>
+
+<p>The M1 can be configured in Global mode for either:
+<ul>
+<li><b>100 Programs / 100 Combinations</b> (default)
+<li><b>50 Programs / 50 Combinations</b> (alternate, reserves more sequencer memory)
+</ul>
+Patch numbers 00–99 are valid in the 100-program allocation; 00–49 in the 50-program
+allocation.  Edisyn always shows 100 patch slots; writing beyond the valid range will fail.
+
+<br><br><h3>Card Bank</h3>
+
+<p>Writing to the Card bank requires a RAM card inserted with its write-protect switch off.
+If no card is present, write commands to the Card bank will fail.
+
+<br><br><h3>EG SW / Polarity</h3>
+
+<p>The M1 stores EG Time KBD Track, Velocity Switch, and Polarity settings as packed bit
+fields.  In this editor they appear as raw byte values (0–255) on the Mod tab under
+<b>EG SW / Polarity</b>.  Bit 0 = Attack Time SW, Bit 1 = Decay Time SW, Bit 2 = Slope
+Time SW, Bit 3 = Release Time SW, Bit 4 = Attack Polarity, Bit 5 = Decay Polarity,
+Bit 6 = Slope Polarity, Bit 7 = Release Polarity.
+
+<br><br><h3>Effect Parameters</h3>
+
+<p>The M1 has 34 effect types, each with up to 8 parameters whose meaning varies by
+effect type.  Edisyn displays these as generic <b>P1–P8</b> dials (0–255 range).  Consult
+the M1 Owner's Manual (Section *11, page 129) for parameter definitions for each effect type.
+
+<br><br><h3>Librarian Support</h3>
+
+<p>Edisyn can read and write individual patches.  Use <b>Download Bank from Synth</b> to
+retrieve patches one by one.  Bank SysEx bulk-download (4CH) is not currently implemented.
+
+<p><table border=0 cellpadding=0 cellspacing=5>
+<tr>
+<td align=right>By&nbsp;&nbsp;&nbsp;
+<td><b>Sean Luke</b>
+<tr>
+<td align=right>Date&nbsp;&nbsp;&nbsp;
+<td>2024
+</table>
+
 </body>
 </html>
