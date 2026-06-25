@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **Phase 2 (done):** Full editing UI — 7 tabs (Global, OSC, Pitch EG, VDF, VDA, Mod, FX), all 143 parameters
   - **Phase 3 (done):** MIDI integration — `emitAll()` with write command (11H), `parseParameter()` for error detection, `getAlwaysChangesPatchesOnRequestDump()`
   - **Phase 4 (done):** Librarian support — `getSupportsPatchWrites()`, `getBankNames()`, `getWriteableBanks()`, `getPatchNumberNames()`
-  - **Next step: Phase 5** — About HTML polish, hardware testing, combination mode (deferred)
+  - **Phase 5 (in progress):** Hardware testing — M1 connected via MIDI, Edisyn running, EXCL ON confirmed; testing request/send/write cycle next
   - Reference files: `docs/M1_E4.pdf` (manual), `docs/KorgM1_piano16.syx` (init), `docs/M1_midi_export.syx` (factory bank)
 
 ## What is Edisyn
