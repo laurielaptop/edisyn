@@ -1,0 +1,86 @@
+<html><head></head>
+<body>
+
+<h1>Korg M1 [Combi]</h1>
+<h2>Combination Patch Editor</h2>
+
+<p>This editor works with the <b>Korg M1</b> (1988) synthesizer in <b>Combination mode</b>.
+It edits Combination patches, which layer up to 8 Programs (timbres) with independent
+MIDI channel, key range, velocity range, and output routing.
+
+<br><br><h3>Communicating with Edisyn</h3>
+
+<p>Set the M1's <b>Global MIDI Channel</b> to match Edisyn's MIDI output channel.
+To do this, hold <b>GLOBAL</b> and use the data slider or arrow buttons to select the MIDI channel.
+
+<p>The M1 must be in <b>Combination mode</b> (press <b>COMBI</b>) for requests and
+writes to work.  While in Combination mode, Program Change messages select Combination
+numbers (not Programs).
+
+<p>Before writing patches to the M1, turn off <b>Memory Protect</b>.  In Global mode,
+set <b>MEM PROT</b> to OFF.
+
+<br><br><h3>Requesting and Sending Patches</h3>
+
+<p>Because the M1 has no direct "request combination by number" SysEx command, Edisyn
+will first send a Program Change to select the desired combination, then request the
+current combination dump.  A short settling delay is inserted automatically.
+
+<p>To send a combination to the M1's working memory, use <b>Send to Synth</b>.  To write
+a combination to a specific memory slot, use <b>Write to Synth</b> and enter a bank
+(Internal or Card) and combination number (00–99).
+
+<br><br><h3>Combination Types</h3>
+
+<p>The M1 supports five combination types:
+<ul>
+<li><b>Single</b> — one timbre plays across the full keyboard
+<li><b>Layer</b> — two timbres sound together
+<li><b>Split</b> — two timbres divided by key range
+<li><b>Vel. Switch</b> — two timbres switched by velocity
+<li><b>Multi</b> — up to 8 timbres with independent MIDI channels, key windows,
+    and velocity windows (multitimbral mode)
+</ul>
+In Single, Layer, Split, and Vel. Switch types, only Timbres 1 and 2 are active.
+In Multi type, all 8 timbres can be active.
+
+<br><br><h3>Timbre Parameters</h3>
+
+<p>Each timbre has:
+<ul>
+<li><b>Program</b> — selects which M1 Program plays on this timbre (I00–I99 = Internal, C00–C99 = Card)
+<li><b>Level</b> — output volume (0–99)
+<li><b>Transpose</b> — pitch shift in semitones (-12 to +12)
+<li><b>Detune</b> — fine pitch in cents (-50 to +50)
+<li><b>Pan</b> — stereo placement (0–13)
+<li><b>Ins Mode</b> — when checked, this timbre acts as an independent instrument
+<li><b>Key Win Top / Bottom</b> — MIDI note range for this timbre (0=C-1, 127=G9)
+<li><b>Vel Win Top / Bottom</b> — velocity range for this timbre (1–127)
+<li><b>MIDI Ch</b> — MIDI channel this timbre responds to (1–16)
+<li><b>On</b> — enable/disable this timbre
+<li><b>Prog Chg / Damper / After Touch / Ctrl Chg</b> — which MIDI controllers this timbre responds to
+</ul>
+
+<br><br><h3>Memory Allocation and Card Bank</h3>
+
+<p>The M1 can be configured for either 100 or 50 Combinations.  Combination numbers
+00–99 are valid in the 100-combination allocation; 00–49 in the 50-combination allocation.
+Writing to the Card bank requires a RAM card with write-protect off.
+
+<br><br><h3>Effect Parameters</h3>
+
+<p>The M1 has 34 effect types, each with up to 8 parameters whose meaning varies by type.
+Edisyn displays these as generic <b>P1–P8</b> dials (0–255 range).  Consult the M1
+Owner's Manual (Section *11, page 129) for parameter definitions for each effect type.
+
+<p><table border=0 cellpadding=0 cellspacing=5>
+<tr>
+<td align=right>By&nbsp;&nbsp;&nbsp;
+<td><b>Sean Luke</b>
+<tr>
+<td align=right>Date&nbsp;&nbsp;&nbsp;
+<td>2024
+</table>
+
+</body>
+</html>

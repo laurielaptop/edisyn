@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Active Work
 
-- **Korg M1 editor** — Phases 1–4 complete. See `docs/korg-m1-editor-plan.md` for the full plan.
+- **Korg M1 editor** — Phases 1–5 complete (Program editor + Combination editor). See `docs/korg-m1-editor-plan.md` for the full plan.
   - **Phase 1 (done):** `KorgM1.java`, `KorgM1Rec.java`, `KorgM1.init`, `synths.txt` entry; SanityCheck passes clean
   - **Phase 2 (done):** Full editing UI — 7 tabs (Global, OSC, Pitch EG, VDF, VDA, Mod, FX), all 143 parameters
   - **Phase 3 (done):** MIDI integration — `emitAll()` with write command (11H), `parseParameter()` for error detection, `getAlwaysChangesPatchesOnRequestDump()`
   - **Phase 4 (done):** Librarian support — `getSupportsPatchWrites()`, `getBankNames()`, `getWriteableBanks()`, `getPatchNumberNames()`
-  - **Phase 5 (in progress):** Hardware testing — M1 connected via MIDI, Edisyn running, EXCL ON confirmed; testing request/send/write cycle next
+  - **Phase 5 (done):** Combination editor — `KorgM1Combi.java`, `KorgM1CombiRec.java`, `KorgM1Combi.init`, `KorgM1Combi.html`; SanityCheck passes clean
+  - **Hardware testing (in progress):** Program editor fully working. Combi editor: Request Current Patch confirmed working (spurious 24H from MIDI THRU echo suppressed by arming flag in `requestCurrentDump()`). Send/Write cycle for Combi still under test.
   - Reference files: `docs/M1_E4.pdf` (manual), `docs/KorgM1_piano16.syx` (init), `docs/M1_midi_export.syx` (factory bank)
 
 ## What is Edisyn
