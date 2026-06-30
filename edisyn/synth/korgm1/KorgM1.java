@@ -29,8 +29,8 @@ public class KorgM1 extends Synth
     public static final String[] POLY_MODES = { "Poly", "Mono" };
     public static final String[] MG_WAVES = { "Triangle", "Up Saw", "Down Saw", "Rectangle" };
 
+    // M1 sends 0=Hall..32=Delay/Tremolo, 33=No Effect (0-indexed; Off at end)
     public static final String[] EFFECT_TYPES = {
-        "No Effect",
         "Hall", "Ensemble Hall", "Concert Hall",
         "Room", "Large Room", "Live Stage",
         "Early Ref 1", "Early Ref 2", "Early Ref 3",
@@ -45,7 +45,8 @@ public class KorgM1 extends Synth
         "Symphonic Ensemble", "Rotary Speaker",
         "Delay/Hall", "Delay/Room", "Delay/Early Ref",
         "Delay/Delay", "Delay/Chorus", "Delay/Flanger",
-        "Delay/Phaser", "Delay/Tremolo"
+        "Delay/Phaser", "Delay/Tremolo",
+        "No Effect"
         };
 
     // Internal multisounds 00-99, Card placeholders 100-127

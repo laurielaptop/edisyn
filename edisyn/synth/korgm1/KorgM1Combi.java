@@ -497,9 +497,13 @@ public class KorgM1Combi extends Synth
         byte[] patch = emit(tempModel, toWorkingMemory, toFile);
 
         if (toWorkingMemory || toFile)
+            {
+            if (!toFile) suppressNextDataLoadError = true;  // suppress THRU-echo 24H
             return new Object[] { patch };
+            }
 
         // Write combination to specific slot (func 1AH).
+        suppressNextDataLoadError = true;  // suppress THRU-echo 24H
         int ch = Math.max(0, getChannelOut() - 1);
         byte[] writeCmd = new byte[] {
             (byte)0xF0, (byte)0x42,
