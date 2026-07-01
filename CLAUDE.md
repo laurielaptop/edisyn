@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **Phase 3 (done):** MIDI integration — `emitAll()` with write command (11H), `parseParameter()` for error detection, `getAlwaysChangesPatchesOnRequestDump()`
   - **Phase 4 (done):** Librarian support — `getSupportsPatchWrites()`, `getBankNames()`, `getWriteableBanks()`, `getPatchNumberNames()`
   - **Phase 5 (done):** Combination editor — `KorgM1Combi.java`, `KorgM1CombiRec.java`, `KorgM1Combi.init`, `KorgM1Combi.html`; SanityCheck passes clean
-  - **Hardware testing (in progress):** Program editor fully working. Combi editor: Request Current Patch confirmed working (spurious 24H from MIDI THRU echo suppressed by arming flag in `requestCurrentDump()`). Send/Write cycle for Combi still under test.
+  - **Hardware testing (in progress):** Program editor fully working, including Librarian batch download (File > Batch Download > To Librarian), confirmed for the Internal bank. Combi editor: Request Current Patch, and Librarian batch download for the Internal bank, confirmed working (spurious 24H from MIDI THRU echo suppressed by arming flag in `requestCurrentDump()`). Send/Write cycle for Combi still under test.
+  - **Known issue:** `changePatch()` in both `KorgM1.java` and `KorgM1Combi.java` computes the Program Change value as `bank*100 + number`, which is out of the valid MIDI PC range (0–127) for the Card bank (bank=1, PC 100–199). The M1 likely needs a Bank Select CC before the Program Change for Card patches; this hasn't been implemented or tested yet, since Card-bank hardware testing hasn't been reached.
   - Reference files: `docs/M1_E4.pdf` (manual), `docs/KorgM1_piano16.syx` (init), `docs/M1_midi_export.syx` (factory bank)
 
 ## What is Edisyn

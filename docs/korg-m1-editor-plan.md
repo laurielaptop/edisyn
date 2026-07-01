@@ -377,6 +377,26 @@ Reference: `KawaiK1.java` — same era PCM synth, similar parameter structure an
 7. `requestCurrentDump()` / batch download loop already wired from Phase 3
 8. Test batch download of all 100 Internal programs
 
+> **Hardware finding (post-Phase 5):** `requestCurrentDump()` alone is not
+> enough to make Librarian batch download (`performRequestDump()`) work.
+> `Synth.performRequestDump()` calls `requestDump(Model)`, not
+> `requestCurrentDump()` — the two editors must also override
+> `requestDump(Model tempModel) { return requestCurrentDump(); }`, matching
+> the pattern used by `YamahaDX7`, `RolandJV880`, `WaldorfMicrowave`, etc.
+> Without it, `requestDump()` falls back to the `Synth` default (sends
+> nothing) and the M1 never replies.
+>
+> Separately, since the M1's parameter dump carries no bank/number bytes,
+> `changePatch()` must also update the live `model`'s `"bank"`/`"number"`
+> (guarded by `setSendMIDI(false)`/`true` and `!isMerging()`), or
+> `patchLocationEquals()` rejects every dump after the first as "received
+> unexpected patch." See `KorgSG.java` for the reference pattern. Both fixes
+> are in place as of the commit "Korg M1: fix Librarian batch download for
+> Program and Combi"; confirmed working on hardware for the Internal bank on
+> both editors. Card bank is untested — see the Known issue in `CLAUDE.md`
+> about `changePatch()`'s Program Change value exceeding 127 for Card
+> patches.
+
 ### Phase 5 — Polish and Combination Mode
 
 1. Write `KorgM1.html` — About panel with MIDI channel setup instructions, note on memory allocation, known quirks (e.g., memory protect error on write)
