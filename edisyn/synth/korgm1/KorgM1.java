@@ -818,6 +818,16 @@ public class KorgM1 extends Synth
                 getChannelOut(), pc, 0));
             }
         catch (Exception e) { Synth.handleException(e); }
+
+        // The Program Parameter Dump carries no bank/number, so update our model's
+        // notion of location now, else patchLocationEquals() will reject the reply.
+        if (!isMerging())
+            {
+            setSendMIDI(false);
+            model.set("bank", tempModel.get("bank"));
+            model.set("number", tempModel.get("number"));
+            setSendMIDI(true);
+            }
         }
 
     public int getPauseAfterChangePatch() { return 50; }
@@ -827,6 +837,12 @@ public class KorgM1 extends Synth
     public boolean testVerify(Synth synth2, String key, Object obj1, Object obj2)
         {
         return key.equals("bank") || key.equals("number");
+        }
+
+    // We have to force a change patch always because we're doing the equivalent of requestCurrentDump here
+    public byte[] requestDump(Model tempModel)
+        {
+        return requestCurrentDump();
         }
 
     public byte[] requestCurrentDump()
